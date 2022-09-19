@@ -1,25 +1,22 @@
 import db from "../databases/db.js";
+import dayjs from "dayjs"
 
 async function buy(req, res){
-    const { produtos, total, formaPagamento } = req.body
-    const {authorization} = req.headers;
-    const token = authorization?.replace('Bearer ', '');
-    if(!authorization){
-        return res.sendStatus(401)
-    }
+    const { products, total, buyWay, name, address,email } = req.body
+    
+    if(!products|| !total|| !buyWay || !name|| !address|| !email){
+        return res.sendStatus(400)
+    }; 
 
     try{
-        
-        const users = db.collection("sessions").findOne({token})
-        if(token !== users.token){
-            return res.sendStatus(401);
-        }
         await db.collection("sold").insertOne({
-            name: users.name,
-            address: users.address,
-            produtos,
+            name: name,
+            address: address,
+            products,
             total,
-            formaPagamento
+            buyWay,
+            email: email,
+            day: dayjs().format("DD/MM")
         });
         return res.sendStatus(201);
     }catch(error){
@@ -27,4 +24,46 @@ async function buy(req, res){
     }
 }
 
-export {buy};
+async function getBuys(req, res) {
+    const { authorization, email} = req.headers;
+    const token = authorization?.replace('Bearer ', '');
+
+    if(!token) {
+        return res.sendStatus(401);
+    }
+    try {
+        const session =  await db.collection('sessions').findOne({ token });
+        if (!session) {
+            return res.sendStatus(401);
+        }
+        const productsList = await db.collection('sold').find({email: email}).toArray();
+        return res.send(productsList.map(value => ({
+            ...value
+        })));
+
+    } catch (error) {
+        return res.sendStatus(500);
+    }
+}
+
+async function removeCart(req, res) {
+    const { authorization, email} = req.headers;
+    const token = authorization?.replace('Bearer ', '');
+
+    if(!token) {
+        return res.sendStatus(401);
+    }
+    try {
+        const session =  await db.collection('sessions').findOne({ token });
+        if (!session) {
+            return res.sendStatus(401);
+        }
+        const productsList = await db.collection('cart').deleteMany({email: email});
+        return res.sendStatus(200);
+
+    } catch (error) {
+        return res.sendStatus(500);
+    }
+}
+
+export {buy, getBuys, removeCart};
