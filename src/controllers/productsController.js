@@ -19,8 +19,36 @@ async function products(req, res) {
         })));
 
     } catch (error) {
-        return res.sendStatus(500)
+        return res.sendStatus(500);
     }
 }
 
-export { products }
+async function addToCart(req, res) {
+    const { name, id } = req.body;
+
+    try {
+        const user = await db.collection('users').findOne({ name });
+        if (!user) {
+            res.sendStatus(404);
+        }
+        const product = await db.collection('products').findOne({ id });
+        if (!product) {
+            res.sendStatus(404);
+        }
+
+        await db.collection('cart').insertOne({
+            user: user.name, 
+            email: user.email, 
+            id: product.id,
+            name: product.name,
+            image: product.image,
+            price: product.price
+        });
+
+        return res.sendStatus(200);
+    } catch (error) {
+        return res.sendStatus(500);
+    }
+}
+
+export { products, addToCart }
