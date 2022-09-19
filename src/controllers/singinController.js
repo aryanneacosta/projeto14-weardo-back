@@ -12,7 +12,7 @@ async function singIn(req, res) {
       await db
         .collection(`sessions`)
         .insertOne({ userId: user._id, token, address: user.address });
-      return res.send({ token: token, name: user.name });
+      return res.send({ token: token, name: user.name, address: user.address, email: email  });
     } else {
       return res.sendStatus(401);
     }
