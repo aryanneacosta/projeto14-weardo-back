@@ -1,7 +1,6 @@
-import singUpSchema from "../schemas/singupSchema.js";
+
 import bcrypt from "bcrypt";
 import db from "../databases/db.js";
-
 
 async function singUp(req, res) {
   const { name, email, password, address } = req.body;
